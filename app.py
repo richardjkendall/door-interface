@@ -7,7 +7,9 @@ import sys
 import re
 import json
 import paho.mqtt.client as mqtt
+from decouple import config
 
+# setup logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] (%(threadName)-10s) %(message)s')
 
 class MqttSender(threading.Thread):
@@ -44,9 +46,10 @@ class MqttSender(threading.Thread):
     super(MqttSender, self).join(timeout)
 
 class HandleHIDCode(threading.Thread):
-  def __init__(self, req_q, mqtt_pub_queue):
+  def __init__(self, req_q, mqtt_pub_queue, door_name):
     super(HandleHIDCode, self).__init__()
     self.q = req_q
+    self.door_name = door_name
     self.mqtt_pub_queue = mqtt_pub_queue
     self.stoprequest = threading.Event()
 
@@ -93,7 +96,8 @@ class HandleHIDCode(threading.Thread):
       "type": "26-bit",
       "time": str(time.time()),
       "facility_code": facility_code,
-      "card_code": card_code
+      "card_code": card_code,
+      "door_name": self.door_name
     }
 
   def process_35bit_card(self, hid_code):
@@ -111,7 +115,8 @@ class HandleHIDCode(threading.Thread):
       "type": "35-bit",
       "time": str(time.time()),
       "facility_code": facility_code,
-      "card_code": card_code
+      "card_code": card_code,
+      "door_name": self.door_name
     }
 
   def join(self, timeout=None):
@@ -156,12 +161,22 @@ class FakeSerial(threading.Thread):
     super(FakeSerial, self).join(timeout)
 
 def run_program():
+  # get config
+  door_name = config("DOOR_NAME")
+  com_port = config("COM_PORT")
+  mqtt_broker_host = config("MQTT_BROKER_HOST")
+  mqtt_door_hid_topic = config("MQTT_DOOR_STATUS_TOPIC")
+  log_level = config("LOGGING")
+
+  # create internal queues
   serial_out_queue = queue.Queue()
   mqtt_pub_queue = queue.Queue()
-  hid_thread = HandleHIDCode(req_q=serial_out_queue, mqtt_pub_queue=mqtt_pub_queue)
-  #ser_thread = SerialHandler(req_q=serial_out_queue, com_port="COM3")
+
+  # create threads
+  hid_thread = HandleHIDCode(req_q=serial_out_queue, mqtt_pub_queue=mqtt_pub_queue, door_name=door_name)
+  #ser_thread = SerialHandler(req_q=serial_out_queue, com_port=com_port)
   ser_thread = FakeSerial(req_q=serial_out_queue)
-  mqtt_send_thread = MqttSender(req_q=mqtt_pub_queue, host="localhost", topic="house/storage/door1/hidreader")
+  mqtt_send_thread = MqttSender(req_q=mqtt_pub_queue, host=mqtt_broker_host, topic=mqtt_door_hid_topic)
 
   try:
     # HID code handling thread
