@@ -8,8 +8,8 @@ import paho.mqtt.client as mqtt
 door_timeout = int(config("DOOR_OPEN_TIME"))
 
 class DoorHandler(threading.Thread):
-  def __init__(self, message_in_q, message_out_q, serial_q):
-    super(DoorHandler, self).__init__()
+  def __init__(self, tname, message_in_q, message_out_q, serial_q):
+    super(DoorHandler, self).__init__(name=tname)
     self.message_in_q = message_in_q
     self.message_out_q = message_out_q
     self.serial_q = serial_q

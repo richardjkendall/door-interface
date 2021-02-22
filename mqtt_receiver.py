@@ -5,8 +5,8 @@ import logging
 import paho.mqtt.client as mqtt
 
 class MqttReceiver(threading.Thread):
-  def __init__(self, send_q, host, topic):
-    super(MqttReceiver, self).__init__()
+  def __init__(self, tname, send_q, host, topic):
+    super(MqttReceiver, self).__init__(name=tname)
     self.q = send_q
     self.host = host
     self.topic = topic

@@ -5,8 +5,8 @@ import logging
 import serial
 
 class SerialHandler(threading.Thread):
-  def __init__(self, req_q, send_q, com_port):
-    super(SerialHandler, self).__init__()
+  def __init__(self, tname, req_q, send_q, com_port):
+    super(SerialHandler, self).__init__(name=tname)
     self.q = req_q
     self.send_q = send_q
     self.ser = serial.Serial(port=com_port, baudrate=9600, timeout=0.5)
@@ -38,8 +38,8 @@ class SerialHandler(threading.Thread):
     super(SerialHandler, self).join(timeout)
 
 class FakeSerial(threading.Thread):
-  def __init__(self, req_q):
-    super(FakeSerial, self).__init__()
+  def __init__(self, tname, req_q):
+    super(FakeSerial, self).__init__(name=tname)
     self.q = req_q
     self.stoprequest = threading.Event()
 

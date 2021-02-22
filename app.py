@@ -31,13 +31,13 @@ def run_program():
   door_lock_out_queue = queue.Queue()
 
   # create threads
-  ser_thread = SerialHandler(req_q=serial_out_queue, send_q=serial_in_queue, com_port=com_port)
-  fake_ser_thread = FakeSerial(req_q=serial_out_queue)
-  hid_thread = HandleHIDCode(req_q=serial_out_queue, mqtt_pub_queue=mqtt_pub_queue, door_name=door_name)
-  mqtt_send_thread = MqttSender(req_q=mqtt_pub_queue, host=mqtt_broker_host, topic=mqtt_door_hid_topic)
-  mqtt_rec_thread = MqttReceiver(send_q=door_lock_in_queue, host=mqtt_broker_host, topic=mqtt_door_lock_topic)
-  door_handler = DoorHandler(message_in_q=door_lock_in_queue, message_out_q=door_lock_out_queue, serial_q=serial_in_queue)
-  mqtt_door_lock_send_thread = MqttSender(req_q=door_lock_out_queue, host=mqtt_broker_host, topic=mqtt_door_lock_topic)
+  ser_thread = SerialHandler(tname="SerialThread", req_q=serial_out_queue, send_q=serial_in_queue, com_port=com_port)
+  fake_ser_thread = FakeSerial(tname="FakeSerialThread", req_q=serial_out_queue)
+  hid_thread = HandleHIDCode(tname="HIDProcThread", req_q=serial_out_queue, mqtt_pub_queue=mqtt_pub_queue, door_name=door_name)
+  mqtt_send_thread = MqttSender(tname="MQTTHIDTxThread", req_q=mqtt_pub_queue, host=mqtt_broker_host, topic=mqtt_door_hid_topic)
+  mqtt_rec_thread = MqttReceiver(tname="MQTTDoorLockRxThread", send_q=door_lock_in_queue, host=mqtt_broker_host, topic=mqtt_door_lock_topic)
+  door_handler = DoorHandler(tname="DoorLockThread", message_in_q=door_lock_in_queue, message_out_q=door_lock_out_queue, serial_q=serial_in_queue)
+  mqtt_door_lock_send_thread = MqttSender(tname="MQTTDoorLockTxThread", req_q=door_lock_out_queue, host=mqtt_broker_host, topic=mqtt_door_lock_topic)
 
   try:
     # HID code handling thread

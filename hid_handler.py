@@ -8,8 +8,8 @@ import re
 import json
 
 class HandleHIDCode(threading.Thread):
-  def __init__(self, req_q, mqtt_pub_queue, door_name):
-    super(HandleHIDCode, self).__init__()
+  def __init__(self, tname, req_q, mqtt_pub_queue, door_name):
+    super(HandleHIDCode, self).__init__(name=tname)
     self.q = req_q
     self.door_name = door_name
     self.mqtt_pub_queue = mqtt_pub_queue
