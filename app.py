@@ -1,5 +1,4 @@
 import time
-#import threading
 import queue
 import logging
 import sys
@@ -21,7 +20,7 @@ def run_program():
   mqtt_broker_host = config("MQTT_BROKER_HOST")
   mqtt_door_hid_topic = config("MQTT_DOOR_STATUS_TOPIC")
   mqtt_door_lock_topic = config("MQTT_DOOR_LOCK_TOPIC")
-  log_level = config("LOGGING")
+  fake_serial = config("FAKE_SERIAL")
 
   # create internal queues
   serial_out_queue = queue.Queue()
@@ -51,9 +50,10 @@ def run_program():
     logging.info("Serial handling thread has started")
 
     # Fake serial handling thread
-    fake_ser_thread.setDaemon(True)
-    fake_ser_thread.start()
-    logging.info("Fake serial handling thread has started")
+    if fake_serial == "on":
+      fake_ser_thread.setDaemon(True)
+      fake_ser_thread.start()
+      logging.info("Fake serial handling thread has started")
 
     # MQTT thread (for sending HID codes)
     mqtt_send_thread.setDaemon(True)
@@ -83,7 +83,8 @@ def run_program():
   except (KeyboardInterrupt, SystemExit):
     logging.info("Cleaning up... killing threads")
     ser_thread.join(3)
-    fake_ser_thread.join(3)
+    if fake_serial == "on":
+      fake_ser_thread.join(3)
     hid_thread.join(3)
     mqtt_send_thread.join(3)
     door_handler.join(3)
