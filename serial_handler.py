@@ -45,7 +45,7 @@ class FakeSerial(threading.Thread):
 
   def run(self):
     while not self.stoprequest.isSet():
-      time.sleep(10)
+      time.sleep(120)
       data = "[26,3151EAA]"
       logging.info("Putting fake data '{d}' onto queue".format(d=data))
       self.q.put("{d}".format(d=data))

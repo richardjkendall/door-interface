@@ -13,9 +13,13 @@ class MqttReceiver(threading.Thread):
     self.client = mqtt.Client()
     self.client.on_connect = self._mqtt_on_connect
     self.client.on_message = self._mqtt_on_message
+    self.client.on_disconnect = self._mqtt_on_disconnect
     self.client.connect(host=self.host)
     self.stoprequest = threading.Event()
   
+  def _mqtt_on_disconnect(self, client, userdata, rc):
+    logging.info("Got disconnected from MQTT broker")
+
   def _mqtt_on_connect(self, client, userdata, flags, rc):
     logging.info("Connected to {host} with result code {rc}, subscribing to {topic}...".format(host=self.host, rc=str(rc), topic=self.topic))
     self.client.subscribe(self.topic)
