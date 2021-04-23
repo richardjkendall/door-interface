@@ -14,23 +14,27 @@ class SerialHandler(threading.Thread):
 
   def run(self):
     while not self.stoprequest.isSet():
-      data = self.ser.readline().rstrip(b"\r\n")
-      if data:
-        logging.info("Got data '{d}' from serial port".format(d=data.decode("utf-8")))
-        self.q.put("{d}".format(d=data.decode("utf-8")))
-      else:
-        logging.debug("No data on serial port, checking send queue...")
-        try:
-          message = self.send_q.get(True, 0.05)
-          logging.info("Got message '{msg}' from Queue to send to serial port".format(msg=message))
-          if message == "open":
-            logging.info("Setting door lock to open")
-            self.ser.write(b"OP\n")
-          elif message == "close":
-            logging.info("Setting door lock to closed")
-            self.ser.write(b"CL\n")
-        except queue.Empty:
-          continue
+      try:
+        data = self.ser.readline().rstrip(b"\r\n")
+        if data:
+          logging.info("Got data '{d}' from serial port".format(d=data.decode("utf-8")))
+          self.q.put("{d}".format(d=data.decode("utf-8")))
+        else:
+          logging.debug("No data on serial port, checking send queue...")
+          try:
+            message = self.send_q.get(True, 0.05)
+            logging.info("Got message '{msg}' from Queue to send to serial port".format(msg=message))
+            if message == "open":
+              logging.info("Setting door lock to open")
+              self.ser.write(b"OP\n")
+            elif message == "close":
+              logging.info("Setting door lock to closed")
+              self.ser.write(b"CL\n")
+          except queue.Empty:
+            continue
+      except UnicodeDecodeError:
+        logging.error("Unicode decode error... ignoring data from serial port")
+        continue
 			
   def join(self, timeout=None):
     logging.info("SerialHandler setting exit flag")
